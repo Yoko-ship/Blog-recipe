@@ -1,0 +1,26 @@
+.menu{
+    display: flex;
+    justify-content: center;
+}
+
+.menu div{
+    border: 5px solid rgb(161, 131, 146);
+    padding: 15px;
+    margin: 10px;
+    font-size: 20px;
+    background-color: antiquewhite;
+}
+.menu button{
+    background: none;
+    border: none;
+    cursor: pointer;   
+}
+.menu button:hover{
+    transform: scale(1.1);
+}
+.menu-if{
+    display: flex;
+    justify-content: center;
+    font-size: 22px;
+    color: red;
+}
