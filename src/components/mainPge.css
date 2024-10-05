@@ -1,0 +1,80 @@
+.grids{
+    display: grid;
+    grid-template-columns: repeat(5,2fr);
+    gap: 10px;
+    padding: 10px;
+    font-size: 20px;
+}
+
+.grid{
+    display: block;
+    padding: 10px;
+    border: 1px solid black;
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
+}
+
+.grid p{
+    font-weight: lighter;
+}
+
+.grid a{
+    text-decoration: none;
+    color: green;
+
+}
+img{
+    max-width: 100%;
+    height: auto;
+}
+
+.input-search{
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+}
+.input-search input{
+    margin-bottom: 10px;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 18px;
+    border: 1px solid black;
+    border-radius: 10px;
+}
+.button-images{
+    border: none;
+    background: none;
+    cursor: pointer;
+
+}
+.button-images:hover{
+    transform: scale(1.1);
+}
+
+.div-edits{
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+.input-change{
+    margin-bottom: 10px;
+    padding: 10px;
+}
+
+.button-change{
+    padding: 10px;
+    background-color: green;
+    color: white;
+}
+
+li{
+    list-style: none;
+}
+
+.main-content{
+    background-color: rgba(126, 125, 125, 0.808);
+}
+
+.bottom-content{
+    background-color: rgb(125, 153, 175);
+}

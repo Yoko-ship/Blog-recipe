@@ -24,17 +24,21 @@ const db = new sqlite3.Database("UserData.db", (err) => {
 const createTableQuery = `
     CREATE TABLE IF NOT EXISTS users(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
     email TEXT NOT NULL,
     password TEXT NOT NULL
     );
 `;
 
+// Создаем таблицу для определенныю юзеров,тоесть: юзер yoko может только получить данные которые он сам может ввести
 const createRecipeTable = `
       CREATE TABLE IF NOT EXISTS recipe(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        description TEXT NOT NULL
-      );
+        description TEXT NOT NULL,
+        userId INTEGER NOT NULL,
+        FOREIGN KEY(userId) REFERENCES users(id)
+      ); 
 `;
 
 
@@ -57,43 +61,22 @@ db.run(createRecipeTable,(err)=>{
 // Регистрация нового пользователя
 
 app.post("/register", async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
+  const { userName,email, password } = req.body;
+  if (!email || !password || !userName) {
     return res.status(500).json({ error: "Почта или пароль обязателен" });
   }
   // Хэшируем пароль
   const hashedPassword = await bcrypt.hash(password, 10);
-  const insertQuery = "INSERT INTO users(email,password) VALUES(?,?)";
+  const insertQuery = "INSERT INTO users(name,email,password) VALUES(?,?,?)";
 
   // Передаем данные в таблицу
-  db.run(insertQuery, [email, hashedPassword], function (err) {
+  db.run(insertQuery, [userName,email, hashedPassword], function (err) {
     if (err) {
       return res.status(401).json({ error: err.message });
     }
     res.json({ id: this.lastID });
   });
 });
-
-
-app.post("/recipe",async(req,res)=>{
-  const {foodName, description} = req.body;
-  if(!foodName){
-    return res.status(500).json({error:"Имя отсутствует"})
-  }
-  if(!description){
-    return res.status(500).json({error:"Описания отсутствует"})
-  }
-
-  const insertQuery = "INSERT INTO recipe(name,description) VALUES(?,?)"
-
-  db.run(insertQuery,[foodName,description],function(err){
-    if(err){
-      return res.status(401).json({error:err.message})
-    }
-    res.json({id:this.lastID})
-  })
-})
-
 
 // Для получение чего либо с помощью токена 
 const authentification = (req,res,next)=>{
@@ -116,16 +99,40 @@ const authentification = (req,res,next)=>{
 };
 
 
+// Передаем рецепты определенному юзеру
+app.post("/recipe",authentification,(req,res)=>{
+  const {foodName, description} = req.body;
+  const userId = req.user.id
+  if(!foodName){
+    return res.status(500).json({error:"Имя отсутствует"})
+  }
+  if(!description){
+    return res.status(500).json({error:"Описания отсутствует"})
+  }
+
+  const insertQuery = "INSERT INTO recipe(name,description,userId) VALUES(?,?,?)"
+
+  db.run(insertQuery,[foodName,description,userId],function(err){
+    if(err){
+      return res.status(401).json({error:err.message})
+    }
+    res.json({id:this.lastID})
+  })
+})
+
+
+
+
 
 
 // Вход пользователя
 app.post("/logIn", (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
+  const {userName,email, password } = req.body;
+  if (!email || !password || !userName) {
     return res.status(401).json({ error: "Пароль или эмейл не совпадает" });
   }
 
-  const query = "SELECT * FROM users WHERE email =?";
+  const query = "SELECT * FROM users WHERE email = ?";
   db.get(query, [email], async (err, user) => {
     if (err) {
       return res.status(401).json({ error: err.message });
@@ -149,12 +156,12 @@ app.post("/logIn", (req, res) => {
 });
 
 
-// Получаем почту юзер'а
-app.get('/email',authentification,(req,res)=>{
-  const email = req.user.email
-  const query = "SELECT email FROM users WHERE email = ?";
+// Получаем имя юзер'а
+app.get('/name',authentification,(req,res)=>{
+  const userName = req.user.email
+  const query = "SELECT name FROM users WHERE email =?";
 
-  db.all(query,[email],(err,rows)=>{
+  db.all(query,[userName],(err,rows)=>{
     if(err){
       return res.status(401).json({error:err.message})
     }
@@ -166,10 +173,22 @@ app.get('/email',authentification,(req,res)=>{
 })
 
 
+app.get("/users",authentification,(req,res)=>{
+  const query = "SELECT name,id FROM users"
+
+  db.all(query,(err,rows)=>{
+    if(err){
+      return res.status(401).json({error:err.message})
+    }
+    res.json(rows)
+  })
+})
+
+
 
 app.get('/recipes',authentification,(req,res)=>{
-  const userId = req.query.id
-  const query = "SELECT id,description,name FROM recipe"
+  const userId = req.user.id
+  const query = "SELECT id,name,description FROM recipe WHERE userId = ?"
 
   db.all(query,[userId],(err,rows)=>{
     if(err){
@@ -182,6 +201,47 @@ app.get('/recipes',authentification,(req,res)=>{
   })
 })
 
+app.get("/user/:id",authentification,(req,res)=>{
+  const userId = req.params.id
+  const query = "SELECT id,name,description FROM recipe WHERE userId =?"
+
+  db.all(query,[userId],(err,rows)=>{
+    if(err){
+      console.log(err.message)
+    }
+    res.json(rows)
+  })
+})
+
+
+
+
+// Удаляем столбец c помощью определенного id
+app.delete("/delete/:id",(req,res)=>{
+  const {id} = req.params
+  const sql = "DELETE FROM recipe WHERE id = ? "
+  db.run(sql,[id],(err,result)=>{
+    if(err){
+      return res.status(500).json({error:err.message})
+    }
+    res.send(`Таблица с id ${id} успешно удалилась`);
+  })
+
+})
+
+
+// Редактируем столбец
+app.put("/update/:id",(req,res)=>{
+  const {id } = req.params
+  const {name,description} = req.body
+  const sql = "UPDATE recipe SET name = ?,description = ?  WHERE id =?"
+  db.run(sql,[name,description,id],(err)=>{
+    if(err){
+      console.log("Произошла ошибка")
+    }
+    res.send(`Таблица с id ${id} отредачилась`)
+  }) 
+})
 
 app.listen(port, () => {
   console.log("Сервер работает на порте ", port);

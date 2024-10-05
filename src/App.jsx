@@ -5,23 +5,20 @@ import Register from "./components/Register";
 import LogIn from "./components/LogIn";
 import { useEffect, useState } from "react";
 import Menu from "./components/Menu";
-import RegisterSuccess from "./components/RegisterSuccess";
-import LoginSuccess from "./components/LoginSuccess";
-import ProtectedMenu from "./components/ProtectedMenu";
+import Recipe from "./components/Recipe";
+
 
 function App() {
   const [token, setToken] = useState(null);
-  const storage = localStorage.setItem("token",token)
-
 
 
 
   useEffect(()=>{
-    const storedToken = localStorage.getItem("token")
-    setToken(storedToken)
-  },[])
-
-
+    const tokenFromStorage = localStorage.getItem("token");
+    if(tokenFromStorage){
+      setToken(tokenFromStorage)
+    }
+  },[token])
   return (
     <>
       <Router>
@@ -42,28 +39,34 @@ function App() {
             <li>
               <Link to="/menu">Аккаунт</Link>
             </li>
+            <li>
+              <Link to="/recipe">Рецепты</Link>
+            </li>
           </ul>
         </header>
+        <div className="app-menu">
+            {token ?(
+            <p>Добро пожаловать пользователь!</p>
+          ):(
+            <p>Please log in or register.</p>
+          )}
+          
+        </div>
         <Routes>
           <Route path="/" element={<MainPage />} />
-          {/* <Route path="/register" element={<Register />} /> */}
-          <Route path="/logIn" element={<LogIn setToken={setToken} />} />
+          <Route path="/logIn" element={<LogIn/>} />
           <Route
             path="/menu"
             element={
-              <ProtectedMenu token={token}>
-                <Menu />
-              </ProtectedMenu>
+                <Menu/>
             }
           />
           <Route path="/register" element={<Register/>}/>
-          
-
-
-          
+          <Route path="/recipe" element={<Recipe/>}/>
         </Routes>
       </Router>
     </>
+
   );
 }
 

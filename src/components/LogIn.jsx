@@ -1,29 +1,26 @@
 import React, { useEffect, useState } from "react";
-import ConfirmImage from "./assets/confirmation.png";
 import axios from "axios";
-import { Route } from "react-router";
-import Menu from "./Menu";
 import { useNavigate } from "react-router";
 
 
-function LogIn({ setToken}) {
+function LogIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [show, setShow] = useState()
-  const token = localStorage.getItem("token");
+  const [userName,setUserName] = useState("");
+  const [token,setToken] = useState("")
   const navigate = useNavigate()
+
 
   const logUser = (event) => {
     event.preventDefault();
     axios
-      .post("http://localhost:5000/logIn", { email, password })
+      .post("http://localhost:5000/logIn", { userName,email, password })
       .then((response) => {
         console.log("Пользователь успешно вошел в аккаунт", response.data);
-        setToken(response.data.token);
+        const tokens = localStorage.setItem("token",response.data.token)
         navigate("/menu")
         setEmail("");
         setPassword("");
-        setShow(token)
       })
       .catch((err) => {
         console.log(
@@ -33,10 +30,21 @@ function LogIn({ setToken}) {
       });
   };
 
+  useEffect(()=>{
+    const takens = localStorage.getItem("token")
+    if(takens){
+      setToken(takens)
+    }
+  },[token])
+
   return (
     <>
       <div>
         <form>
+          <label htmlFor="name">
+            Имя
+          </label>
+          <input type="text" onChange={e => setUserName(e.target.value)} value={userName}/>
           <label htmlFor="email">Почта</label>
           <input
             type="email"
@@ -55,7 +63,7 @@ function LogIn({ setToken}) {
 
       <div className="show">
 
-        {show ? (
+        {token ? (
           <p style={{ color: "green" }}>Вы успешно вошли в свой аккаунт</p>
         ) : (
           <p style={{ color: "red" }}>

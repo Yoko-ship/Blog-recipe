@@ -1,14 +1,16 @@
+
 .menu{
     display: flex;
     justify-content: center;
+    background-color: rgb(70, 69, 69);
 }
 
 .menu div{
-    border: 5px solid rgb(161, 131, 146);
+    border: 5px solid rgb(0, 0, 0);
     padding: 15px;
     margin: 10px;
     font-size: 20px;
-    background-color: antiquewhite;
+    background-color: rgb(255, 255, 255);
 }
 .menu button{
     background: none;
